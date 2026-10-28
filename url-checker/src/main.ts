@@ -1,7 +1,7 @@
 import {mockCheckUrl} from './mockServer';
 
 
-type state = "success" | "error" | "loading" | "invalid";
+type State = "success" | "error" | "loading" | "invalid" | "idle" ;
 
 function isValidUrl(url: string): boolean {
     try {
@@ -41,15 +41,29 @@ function throttle<T>(
 }
 
 async function checkUrl(url: string): Promise<void> {
+
+    const inputElement = document.getElementById('urlInput') as HTMLInputElement;
+
+    // Checking if the input has changed since the request was made
+    if (inputElement && inputElement.value !== url) return;
+
     displayResult("Loading...", "loading");
     try {
         const result = await mockCheckUrl(url);
+
+        // Checking if the input has changed while we were waiting for the result
+        if (inputElement && inputElement.value !== url) return; 
+
         if (result.exists) {
             displayResult(`URL exists and is a ${result.type}.`, "success");
         } else {
             displayResult("URL does not exist.", "error");
         }
     } catch (error) {
+
+        // Checking if user deleted or changed the input so we don't display an error for a URL that is no longer relevant
+        if (inputElement && inputElement.value !== url) return; 
+
         displayResult("Error checking URL.", "error");
     }
 }
@@ -57,24 +71,25 @@ async function checkUrl(url: string): Promise<void> {
 const throttledCheckUrl = throttle(checkUrl, 500);
 
 function handleInput(value: string): void {
-    if (!isValidUrl(value)) {
-        displayResult("Invalid URL", "invalid"
-
-        );
+    
+    if (value.trim() === "") {
+        displayResult("", "idle");
         return;
     }
 
+    if (!isValidUrl(value)) {
+        displayResult("Invalid URL", "invalid");
+        return;
+    }
     throttledCheckUrl(value);
 }  
 
-function displayResult(result: string, state: state): void{
+function displayResult(result: string, state: State): void{
     const resultElement = document.getElementById('result');
     if (resultElement) {
         resultElement.textContent = result;
         resultElement.dataset.state = state;
     }
-
-
 }
 
 function main(): void {
