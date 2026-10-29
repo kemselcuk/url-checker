@@ -30,6 +30,3 @@ Run the application:
 - `https://example.com/missing.pdf`
 
 The application uses predefined mock data. No real server requests are made.
-
-
-### It took me approximately 2 hours and 15 minutes to complete the task.
